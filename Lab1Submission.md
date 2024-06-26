@@ -1,7 +1,11 @@
 # 22110357, Dinh Tan Dung
 # Lab #1: Buffer Overflow
 # Task 1: Stack smashing by mermory overwritten
+
+---
+
 ## 1.2. bof2.c
+
 ### Analyzing the Source Code
 
 ```c
@@ -28,116 +32,107 @@ void main(int argc, char *argv[])
    }
 }
 ```
+
 #### Key Points:
 1. The `buf` buffer is 40 bytes in size, but `fgets` can read up to 45 bytes, leading to buffer overflow.
-```
-int var;
-  int check = 0x04030201;
-  char buf[40];
+   ```c
+   int var;
+   int check = 0x04030201;
+   char buf[40];
 
-  fgets(buf, 45, stdin);
-```
+   fgets(buf, 45, stdin);
+   ```
 
 2. The `check` variable is located immediately after `buf` in the stack. If `buf` overflows, the value of `check` can be overwritten.
-```
-  int var;
-  int check = 0x04030201;
-  char buf[40];
-```
+   ```c
+   int var;
+   int check = 0x04030201;
+   char buf[40];
+   ```
 
 ### Exploitation Plan
 
-1. **The value of `check` will be over written by using more than 40 bytes of input data.**:
+1. **The value of `check` will be overwritten by using more than 40 bytes of input data.**
 
-2. **Create a payload consists of 40 arbitrary bytes followed by the value `0xdeadbeef` to overwrite `check`.**
+2. **Create a payload consisting of 40 arbitrary bytes followed by the value `0xdeadbeef` to overwrite `check`.**
 
 ### Detailed Steps
 
 #### Step 1: Create the Payload
 
-We create a string with 40 bytes (like 40 of 'A') and the value `0xdeadbeef` in little-endian format.
+We create a string with 40 bytes (like 40 'A's) and the value `0xdeadbeef` in little-endian format.
 
 ```sh
 python -c 'print("A" * 40 + "\xef\xbe\xad\xde")' > payload
 ```
-![image](https://github.com/AlexanderSlokov/Security-Labs-Submission/assets/102212788/74f895cd-de7d-43ff-84ae-e334e0837a2e)
+![Payload creation](https://github.com/AlexanderSlokov/Security-Labs-Submission/assets/102212788/74f895cd-de7d-43ff-84ae-e334e0837a2e)
 
 #### Step 2: Run the Program with the Payload
 
-1. **Compile the program**:
+1. **Compile the program:**
    ```sh
    gcc bof2.c -o bof2.out -fno-stack-protector -z execstack
    ```
-   
-*Set a breakpoint right after fgets to inspect the stack before and after the overflow.*
-![image](https://github.com/AlexanderSlokov/Security-Labs-Submission/assets/102212788/4b11abf7-c006-49f4-93ee-786d3f6a6be9)
 
-*We also need to see where is the stack-pointer is pointing to:*
+2. **Set a breakpoint right after `fgets` to inspect the stack before and after the overflow.**
+   ![Breakpoint](https://github.com/AlexanderSlokov/Security-Labs-Submission/assets/102212788/4b11abf7-c006-49f4-93ee-786d3f6a6be9)
+
+3. **Check the stack pointer and base pointer:**
    ```sh
    (gdb) info registers
    ```
-![image](https://github.com/AlexanderSlokov/Security-Labs-Submission/assets/102212788/3cf7c796-1c00-4322-8aca-314a41030197)
+   ![Registers](https://github.com/AlexanderSlokov/Security-Labs-Submission/assets/102212788/3cf7c796-1c00-4322-8aca-314a41030197)
 
-**Stack State**
-   - **ESP (0xffffd764)**: Stack Pointer points to the current top of the stack.
-   - **EBP (0xffffd768)**: Base Pointer points to the base of the stack frame, which is slightly above the current stack pointer.
+   - **Stack State:**
+     - **ESP (0xffffd764)**: Stack Pointer points to the current top of the stack.
+     - **EBP (0xffffd768)**: Base Pointer points to the base of the stack frame, which is slightly above the current stack pointer.
 
-*Contents of the stack starting from the current value of the stack pointer (ESP).*
-![image](https://github.com/AlexanderSlokov/Security-Labs-Submission/assets/102212788/7b66b90a-9bbd-4f2c-8caf-aa150dca1887)
+4. **Inspect the contents of the stack:**
+   ```sh
+   (gdb) x/32x $esp
+   ```
+   ![Stack Contents](https://github.com/AlexanderSlokov/Security-Labs-Submission/assets/102212788/7b66b90a-9bbd-4f2c-8caf-aa150dca1887)
+
 ### Key Points
-**Initial Stack State**:
-   - The output shows the initial state of the stack at the moment when the program execution is paused at the breakpoint set in the `main` function.
-   - Registers are set up, and the stack pointer (ESP) points to `0xffffd764`.
-**Buffer Location**:
-   - The `buf` buffer starts at `0xffffd764`.
-   - The buffer is 40 bytes long, so it spans from `0xffffd764` to `0xffffd78c`.
-**Check Variable**:
-   - The `check` variable is located immediately after `buf`. Given the 40-byte length of `buf`, `check` should be located around `0xffffd790`.
-   - Since `check` is an integer (4 bytes), its value can be overwritten by the payload.
 
+- **Initial Stack State:**
+  - The output shows the initial state of the stack at the moment when the program execution is paused at the breakpoint set in the `main` function.
+  - Registers are set up, and the stack pointer (ESP) points to `0xffffd764`.
 
-2. **Run the program and provide the payload**:
+- **Buffer Location:**
+  - The `buf` buffer starts at `0xffffd764`.
+  - The buffer is 40 bytes long, so it spans from `0xffffd764` to `0xffffd78c`.
+
+- **Check Variable:**
+  - The `check` variable is located immediately after `buf`. Given the 40-byte length of `buf`, `check` should be located around `0xffffd790`.
+  - Since `check` is an integer (4 bytes), its value can be overwritten by the payload.
+
+#### Step 3: Run the Program and Provide the Payload
+
+1. **Run the program and provide the payload:**
    ```sh
    cat payload | ./bof2.out
    ```
-   
-*Very interesting, look like he value of check is `0x41414141`, which corresponds to the ASCII value of 'A'. This indicates that the payload is overflowing correctly but check is being overwritten by 'A's instead of the intended value `0xdeadbeef`.*
-   ![image](https://github.com/AlexanderSlokov/Security-Labs-Submission/assets/102212788/e96f50fb-8387-46e0-aac0-82c51e5af5d4)
 
-*So we nned to craft another payload, let use 36 of 'A' and 4 'B'*   
-```
-python -c 'print("A" * 36 + "BBBB")' > payload
-```
-![image](https://github.com/AlexanderSlokov/Security-Labs-Submission/assets/102212788/f6a0b50c-b570-4ee3-a6c8-4e386cd62100)
-
-=> Why there is a `0a` at the end? Because the issue is with the newline character `\n` (represented as `0a` in hexadecimal) at the end of the payload. When we use `fgets`, it includes the newline character in the buffer, which means the payload is `"A" * 40 + "\xef\xbe\xad\xde\n"`.
-
-#### Step 3: Check the Result
+2. **Verify the Output:**
+   - The value of `check` is `0x41414141`, which corresponds to the ASCII value of 'A'. This indicates that the payload is overflowing correctly but `check` is being overwritten by 'A's instead of the intended value `0xdeadbeef`.
+   ![Incorrect Payload Result](https://github.com/AlexanderSlokov/Security-Labs-Submission/assets/102212788/e96f50fb-8387-46e0-aac0-82c51e5af5d4)
 
 ### Fixing the Payload
 
-To ensure the payload does not include the newline character at the end, you can modify your approach slightly.
-
-### Corrected Payload Creation
-
-We have to remove the newline character by creating the payload in a way that avoids appending it.
-
-1. **Create the Payload without the Newline Character**:
-   Use the `echo -n` command to avoid appending the newline character.
+1. **Create the Payload without the Newline Character:**
    ```sh
    python -c 'print("A" * 40 + "\xef\xbe\xad\xde")' | tr -d '\n' > payload
    ```
 
-2. **Verify the Payload**:
+2. **Verify the Payload:**
    Use `xxd` to confirm that the payload is structured correctly without the newline character.
    ```sh
    xxd payload
    ```
+   ![Corrected Payload](https://github.com/AlexanderSlokov/Security-Labs-Submission/assets/102212788/6f4634c2-6095-4a8c-a53a-42daef4f57ca)
 
-   The output should look like this:
-   ![image](https://github.com/AlexanderSlokov/Security-Labs-Submission/assets/102212788/6f4634c2-6095-4a8c-a53a-42daef4f57ca)
-
-3. **Run the Program with the Correct Payload**:
+3. **Run the Program with the Correct Payload:**
    ```sh
    cat payload | ./bof2.out
    ```
@@ -145,8 +140,9 @@ We have to remove the newline character by creating the payload in a way that av
 ### Expected Output
 
 If the payload is correct, the output should show that `check` is set to `0xdeadbeef`, and the program should print "Yeah! You win!".
-![image](https://github.com/AlexanderSlokov/Security-Labs-Submission/assets/102212788/808165a5-5c9e-47ad-a087-f4ea6c7f4b19)
+![Expected Output](https://github.com/AlexanderSlokov/Security-Labs-Submission/assets/102212788/808165a5-5c9e-47ad-a087-f4ea6c7f4b19)
 
+---
 
 ## 1.3. bof3.c
 *In this program, the variable 'buf' was declared with the size of 128 byte:*
