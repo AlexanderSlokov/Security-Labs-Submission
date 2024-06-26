@@ -1,6 +1,68 @@
 # 22110357, Dinh Tan Dung
 # Lab #1: Buffer Overflow
 # Task 1: Stack smashing by mermory overwritten
+## 1.2. bof2.c
+### Analyzing the Source Code
+
+```c
+#include <stdlib.h>
+#include <stdio.h>
+
+void main(int argc, char *argv[])
+{
+  int var;
+  int check = 0x04030201;
+  char buf[40];
+
+  fgets(buf, 45, stdin);
+
+  printf("\n[buf]: %s\n", buf);
+  printf("[check] 0x%x\n", check);
+
+  if ((check != 0x04030201) && (check != 0xdeadbeef))
+    printf ("\nYou are on the right way!\n");
+
+  if (check == 0xdeadbeef)
+   {
+     printf("Yeah! You win!\n");
+   }
+}
+```
+#### Key Points:
+1. The `buf` buffer is 40 bytes in size, but `fgets` can read up to 45 bytes, leading to buffer overflow.
+```
+int var;
+  int check = 0x04030201;
+  char buf[40];
+
+  fgets(buf, 45, stdin);
+```
+
+2. The `check` variable is located immediately after `buf` in the stack. If `buf` overflows, the value of `check` can be overwritten.
+```
+  int var;
+  int check = 0x04030201;
+  char buf[40];
+```
+
+### Exploitation Plan
+
+1. **The value of `check` will be over written by using more than 40 bytes of input data.**:
+
+2. **Create a payload consists of 40 arbitrary bytes followed by the value `0xdeadbeef` to overwrite `check`.**
+
+
+
+
+
+
+
+
+
+
+
+
+   
 ## 1.3. bof3.c
 *In this program, the variable 'buf' was declared with the size of 128 byte:*
 
@@ -142,7 +204,7 @@ python -c 'print("A" * 128 + "\x5b\x84\x04\x08")' > payload
 
 #### 3. Executing the Payload
 
-To test the payload, you can use GDB to run the program with the payload and verify that the EIP is correctly overwritten:
+To test the payload, we use GDB to run the program with the payload and verify that the EIP is correctly overwritten:
 ```sh
 gdb ./bof3.out
 (gdb) run < payload
@@ -160,10 +222,7 @@ gdb ./bof3.out
 
 #### 1. Understanding Buffer Overflow
 
-  - A buffer overflow occurs when data exceeds the allocated buffer limit, leading to overwriting adjacent memory regions, including the return address of functions.
-
-- **Importance of Checking Buffer Sizes:**
-  - Not thoroughly checking buffer sizes and input data can lead to severe security vulnerabilities.
+  - A buffer overflow occurs when data exceeds the allocated buffer limit, leading to overwriting adjacent memory regions, including the return address of functions. Not checking buffer sizes and input data can lead to security vulnerabilities.
 
 #### 2. Debugging and Analysis Skills
 
