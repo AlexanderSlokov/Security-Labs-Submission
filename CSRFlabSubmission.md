@@ -8,7 +8,7 @@
     - Open a web browser and navigate to `http://localhost:5000/login`.
     - Enter the username `alice` and password `alice`.
    
-    ![img.png](asset/CSRFlabSubmissionimg1.png)
+    ![img](https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/CSRFlabSubmissionimg1.png)    
     - Submit the form to log in. The server will set a session cookie for `alice` as we can see it on the Storage cookie.
    
     ![img.png](asset/CSRFlabSubmissionimg2.png)
