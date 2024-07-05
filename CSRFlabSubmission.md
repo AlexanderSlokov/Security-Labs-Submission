@@ -9,13 +9,13 @@
     - Enter the username `alice` and password `alice`.
     - Submit the form to log in. The server will set a session cookie for `alice` as we can see it on the Storage cookie.
       
-    ![img](https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/CSRFlabSubmissionimg1.png)
+    ![img](https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/CSRFlabSubmissionimg1.png?raw=true)
 
 2. **Check Alice's Balance:**
     - Navigate to `http://localhost:5000/balance`.
     - The server will retrieve Alice's balance from the `user_accounts` dictionary and display it. Alice's initial balance should be $10,000.
       
-    ![img](https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/CSRFlabSubmissionimg3.png)
+    ![img](https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/CSRFlabSubmissionimg3.png?raw=true)
 
   #### 1.2: Doing the Transaction
 
@@ -25,19 +25,19 @@
     - Submit the form to perform the transfer.
     - The server will deduct the amount from Alice's balance and add it to Bob's balance.
       
-    ![img](https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/CSRFlabSubmissionImg6.png)
+    ![img](https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/CSRFlabSubmissionImg6.png?raw=true)
 
   #### 1.3: Transfer Money Illegitimately
 
 1. **Load hidden form (hidden_form.html)**:
     - Open the file `hidden_form.html` in the browser by navigating to the file path `hidden_form.html` on the computer. We simply assumed that Alice was being phished and mistakenly clicked on this fraudulent website.
       
-    ![img](https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/CSRFlabSubmissionImg7.png)
+    ![img](https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/CSRFlabSubmissionImg7.png?raw=true)
 
 2. **Check for illegal transactions**:
     - Check Alice's balance again by navigating to `http://localhost:5000/balance`. Here, I made another legitimate money transfer of $2000, and the phishing attempt robbed Alice of another $1000, so Alice only had $2000 left.
       
-    ![img](https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/CSRFlabSubmissionImg9.png)
+    ![img](https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/CSRFlabSubmissionImg9.png?raw=true)
     - Confirm attacker's balance.
 
   ### Task 2: CSRF Countermeasure Implementation
@@ -127,17 +127,17 @@
 4. **Testing the solution**
 
     - First, we logged in as Alice:
-    ![img](https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/CSRFlabSubmissionImg11.png)
+    ![img](https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/CSRFlabSubmissionImg11.png?raw=true)
     - And we have $10,000 in the balance:
-    ![img](https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/CSRFlabSubmissionImg12.png)
+    ![img](https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/CSRFlabSubmissionImg12.png?raw=true)
     - Now we will make a normal transfer for $5,000, as shown:
-    ![img](https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/CSRFlabSubmissionImg13.png)
+    ![img](https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/CSRFlabSubmissionImg13.png?raw=true)
     - And we recheck to make sure that the transfer could perform fully:
-    ![img](https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/CSRFlabSubmissionImg14.png)
+    ![img](https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/CSRFlabSubmissionImg14.png?raw=true)
     - Then, we should not be able to perform a CSRF attack by opening the `hidden_form.html`.
-    ![img](https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/CSRFlabSubmissionImg15.png)
+    ![img](https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/CSRFlabSubmissionImg15.png?raw=true)
     - But something went wrong with the attack file, that is because the CSRF token was not included in the form submission for the `/transfer` route. This led to a `BadRequestKeyError` because the server expected a CSRF token to be present in the form data. Meanwhile, the account Alice had a CSRF token:
-    ![img](https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/CSRFlabSubmissionImg16.png)
+    ![img](https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/CSRFlabSubmissionImg16.png?raw=true)
     - So, I did some modification to the attacking file:
     ```html
     <!DOCTYPE html>
@@ -161,7 +161,7 @@
     - Since `hidden_form.html` is supposed to simulate a malicious form, it wouldn’t typically have access to the CSRF token. By adding CSRF token checks in the `transfer
 
 ` route, we ensure that any form without a valid CSRF token (like `hidden_form.html`) is blocked from performing unauthorized actions.
-      ![img](https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/CSRFlabSubmissionImg17.png)
+      ![img](https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/CSRFlabSubmissionImg17.png?raw=true)
 
   #### 2.2: Solution 2: SameSite Cookies
 
