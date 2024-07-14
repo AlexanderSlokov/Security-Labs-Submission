@@ -1,20 +1,5 @@
-### Initial Steps:
-firewallSubmission
-
-D:\sercuritylab\Security-labs\Network\firewall>docker exec -it router /bin/bash
-root@2c061a8c11a2:/# echo 1 > /proc/sys/net/ipv4/ip_forward
-bash: /proc/sys/net/ipv4/ip_forward: Read-only file system
-root@2c061a8c11a2:/# iptables -F
-root@2c061a8c11a2:/# iptables -X
-root@2c061a8c11a2:/# iptables -A INPUT -p icmp --icmp-type echo-request -j ACCEPT
-root@2c061a8c11a2:/# iptables -A INPUT -j DROP
-root@2c061a8c11a2:/# iptables -A FORWARD -s 10.9.0.0/24 -d 172.16.10.110 -p tcp --dport 80 -j DROP
-root@2c061a8c11a2:/# iptables -A FORWARD -s 10.9.0.0/24 -d 172.16.10.110 -p tcp --dport 443 -j DROP
-root@2c061a8c11a2:/# iptables -A FORWARD -s 172.16.10.0/24 -d 10.9.0.10 -p tcp --dport 80 -j DROP
-root@2c061a8c11a2:/# iptables -A FORWARD -s 172.16.10.0/24 -d 10.9.0.10 -p tcp --dport 443 -j DROP
-root@2c061a8c11a2:/# iptables-save > /etc/iptables/rules.v4
-bash: /etc/iptables/rules.v4: No such file or directory
-root@2c061a8c11a2:/#
+# 20110357, Dinh Tan Dung
+# Firewall lab submission
 
 1. **Log in to container router:**
  ```sh
@@ -26,7 +11,7 @@ root@2c061a8c11a2:/#
  echo 1 > /proc/sys/net/ipv4/ip_forward
  ```
 
-- ![img.png](firewallSubmission1.png)
+- ![img.png](asset/firewallSubmission1.png)
 
 3. **Set up `iptables` rules:**
 
@@ -58,7 +43,7 @@ curl http://10.9.0.254 # Thử kết nối HTTP tới router (nên bị chặn)
  ```
 
 - As the image has shown, even the telnet or the curl commands connecting to the router, but it does not response, while we still can ping it:
-- ![img.png](img.png)
+- ![img.png](asset/firewallSubmission2.png)
 
  **b. Prevent computers in subnet `10.9.0.0/24` from accessing the internal web server (`iweb`):**
  ```sh
@@ -67,6 +52,16 @@ curl http://10.9.0.254 # Thử kết nối HTTP tới router (nên bị chặn)
  iptables -A FORWARD -s 10.9.0.0/24 -d 172.16.10.110 -p tcp --dport 443 -j DROP
  ```
 
+- Let's perform the curl and see if the rules was set correctly:
+```sh
+ docker exec -it outsider-10.9.0.5 /bin/bash
+ curl http://172.16.10.110 # Check for outsider access to iweb (should be blocked)
+```
+
+- ![img_1.png](asset/firewallSubmission3.png)
+
+- The computer in subnet was not responded to the curl command, so the iptables worked as we expected from it.
+
  **c. Prevent computers in subnet `172.16.10.0/24` from accessing `badsite`:**
  ```sh
  # Block access to badsite from subnet 172.16.10.0/24
@@ -74,28 +69,69 @@ curl http://10.9.0.254 # Thử kết nối HTTP tới router (nên bị chặn)
  iptables -A FORWARD -s 172.16.10.0/24 -d 10.9.0.10 -p tcp --dport 443 -j DROP
  ```
 
-### Check configuration:
-After setting up the `iptables` rules, test again to make sure everything works as expected.
-
-1. **Check ping to the router from computers on the network:**
+- Check web server access:
  ```sh
- docker exec -it outsider-10.9.0.5 /bin/bash
- ping 10.9.0.254 # Check from outsider
- ping 172.16.10.100 # Check from inner1
- ```
-
-2. **Check web server access:**
- ```sh
- docker exec -it outsider-10.9.0.5 /bin/bash
- curl http://172.16.10.110 # Check for outsider access to iweb (should be blocked)
-
  docker exec -it inner1-172.16.10.100 /bin/bash
- curl http://10.9.0.10 # Check access from inner1 to badsite (should be blocked)
+ curl http://10.9.0.10 # Check access from inner to badsite (should be blocked)
  ```
 
-3. **Check `iptables` rules:**
+- ![img_2.png](asset/firewallSubmission4.png)
+
+- The bad-site host was not responded to the curl request from the inner computer in the subnet.
+### Check configuration:
+After setting up the `iptables` rules, we check again to make sure everything works as expected.
+
+**Check `iptables` rules:**
  ```sh
  docker exec -it router /bin/bash
  iptables -L -v -n # List iptables rules
  ```
 
+![img_3.png](asset/firewallSubmission5.png)
+
+### Chain INPUT
+The `INPUT` chain handles packets destined for the local system.
+
+1. **Rule 1**:
+ ```plaintext
+ ACCEPT icmp -- 0.0.0.0/0 0.0.0.0/0 icmp type 8
+ ```
+ This rule accepts ICMP packets (typically used for ping) from any source to any destination.
+
+2. **Rule 2**:
+ ```plaintext
+ DROP all -- 0.0.0.0/0 0.0.0.0/0
+ ```
+ This rule drops all other packets from any source to any destination.
+
+### CHAIN ​​FORWARD
+The `FORWARD` chain handles packets being routed through the system (not destined for the local system).
+
+1. **Rule 1**:
+ ```plaintext
+ DROP tcp -- 10.9.0.0/24 172.16.10.110 tcp dpt:80
+ ```
+ This rule drops TCP packets from the `10.9.0.0/24` network to the `172.16.10.110` IP address on port 80.
+
+2. **Rule 2**:
+ ```plaintext
+ DROP tcp -- 10.9.0.0/24 172.16.10.110 tcp dpt:443
+ ```
+ This rule drops TCP packets from the `10.9.0.0/24` network to the `172.16.10.110` IP address on port 443.
+
+3. **Rule 3**:
+ ```plaintext
+ DROP tcp -- 172.16.10.0/24 10.9.0.10 tcp dpt:80
+ ```
+ This rule drops TCP packets from the `172.16.10.0/24` network to the `10.9.0.10` IP address on port 80.
+
+4. **Rule 4**:
+ ```plaintext
+ DROP tcp -- 172.16.10.0/24 10.9.0.10 tcp dpt:443
+ ```
+ This rule drops TCP packets from the `172.16.10.0/24` network to the `10.9.0.10` IP address on port 443.
+
+### CHAIN ​​OUTPUT
+The `OUTPUT` chain handles packets sent from the local system.
+
+There are no specific rules defined in the `OUTPUT` chain, so the default policy (`ACCEPT`) will apply, meaning all outgoing packets are allowed.
