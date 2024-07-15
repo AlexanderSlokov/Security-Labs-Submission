@@ -11,7 +11,7 @@
  echo 1 > /proc/sys/net/ipv4/ip_forward
  ```
 
-- ![img.png](asset/firewallSubmission1.png)
+- ![img](https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/firewallSubmission1.png?raw=true)
 
 3. **Set up `iptables` rules:**
 
@@ -43,7 +43,7 @@ curl http://10.9.0.254 # Thử kết nối HTTP tới router (nên bị chặn)
  ```
 
 - As the image has shown, even the telnet or the curl commands connecting to the router, but it does not response, while we still can ping it:
-- ![img.png](asset/firewallSubmission2.png)
+- ![img](https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/firewallSubmission2.png?raw=true)
 
  **b. Prevent computers in subnet `10.9.0.0/24` from accessing the internal web server (`iweb`):**
  ```sh
@@ -58,7 +58,7 @@ curl http://10.9.0.254 # Thử kết nối HTTP tới router (nên bị chặn)
  curl http://172.16.10.110 # Check for outsider access to iweb (should be blocked)
 ```
 
-- ![img_1.png](asset/firewallSubmission3.png)
+- ![img](https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/firewallSubmission3.png?raw=true)
 
 - The computer in subnet was not responded to the curl command, so the iptables worked as we expected from it.
 
@@ -75,7 +75,7 @@ curl http://10.9.0.254 # Thử kết nối HTTP tới router (nên bị chặn)
  curl http://10.9.0.10 # Check access from inner to badsite (should be blocked)
  ```
 
-- ![img_2.png](asset/firewallSubmission4.png)
+- ![img](https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/firewallSubmission4.png?raw=true)
 
 - The bad-site host was not responded to the curl request from the inner computer in the subnet.
 ### Check configuration:
@@ -87,7 +87,7 @@ After setting up the `iptables` rules, we check again to make sure everything wo
  iptables -L -v -n # List iptables rules
  ```
 
-![img_3.png](asset/firewallSubmission5.png)
+![img](https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/firewallSubmission5.png?raw=true)
 
 ### Chain INPUT
 The `INPUT` chain handles packets destined for the local system.
