@@ -6,17 +6,13 @@
 ```sh
 echo "Sir, when will we meet again?...When the dandelions bloom, my dear." > plain.txt
 ```
-    
-<img width="500" alt="Screenshot" src="https://github.com/Will-Zidane/SecurityLab/blob/main/Firewall/Screenshot%202024-07-15%20at%2019.16.55.png?raw=true"><br>
-
 
 ## 2. Encrypt the file using AES-256 in ECB mode:
 
 ```sh
 openssl enc -aes-256-ecb -nosalt -in plain.txt -out ecb_encrypted.txt -K 00112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF
 ``` 
-
-![alt text](asset/encryptingLargeMessage1.png)<br>
+<img width="500" alt="Screenshot" src="https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/encryptingLargeMessage1.png?raw=true"><br>
 
 ## 3. View the encrypted file using `xxd`:
 
@@ -24,7 +20,7 @@ openssl enc -aes-256-ecb -nosalt -in plain.txt -out ecb_encrypted.txt -K 0011223
 xxd ecb_encrypted.txt
 ```
 
-![alt text](asset/encryptingLargeMessage2.png)<br>
+<img width="500" alt="Screenshot" src="https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/encryptingLargeMessage2.png?raw=true"><br>
 
 ## 4. Decrypt the file:
 
@@ -32,7 +28,7 @@ xxd ecb_encrypted.txt
 openssl enc -d -aes-256-ecb -nosalt -in ecb_encrypted.txt -out ecb_decrypted.txt -K 00112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF
 ```
 
-![alt text](asset/encryptingLargeMessage3.png)<br>
+<img width="500" alt="Screenshot" src="https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/encryptingLargeMessage3.png?raw=true"><br>
 
 ## 5. **For CBC mode**:
 
@@ -42,9 +38,11 @@ openssl enc -d -aes-256-ecb -nosalt -in ecb_encrypted.txt -out ecb_decrypted.txt
 openssl enc -aes-256-cbc -nosalt -in plain.txt -out cbc_encrypted.txt -K 00112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF -iv 0102030405060708090A0B0C0D0E0F10
 ```
 
-![alt text](asset/encryptingLargeMessage4.png)<br>
+<img width="500" alt="Screenshot" src="https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/encryptingLargeMessage4.png?raw=true"><br>
 
-![alt text](asset/encryptingLargeMessage5.png)<br>
+
+<img width="500" alt="Screenshot" src="https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/encryptingLargeMessage5.png?raw=true"><br>
+
 
 - Decrypt:
 
@@ -52,14 +50,12 @@ openssl enc -aes-256-cbc -nosalt -in plain.txt -out cbc_encrypted.txt -K 0011223
 openssl enc -d -aes-256-cbc -nosalt -in cbc_encrypted.txt -out cbc_decrypted.txt -K 00112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF -iv 0102030405060708090A0B0C0D0E0F10
 ```
 
-![alt text](asset/encryptingLargeMessage6.png)<br>
+
+<img width="500" alt="Screenshot" src="https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/encryptingLargeMessage6.png?raw=true"><br>
 
 # 4.2. Encryption Mode – ECB vs. CBC
 
 ## 1. Download the bitmap file `origin.bmp`.
-
-![origin.bmp](asset/origin.bmp)<br>
-
 
 ## 2. Split the file into header and body:
 
@@ -68,7 +64,7 @@ dd if=origin.bmp of=header.bin bs=1 count=54
 dd if=origin.bmp of=body.bin bs=1 skip=54
 ```
 
-![alt text](asset/encryptingLargeMessage7.png)<br>
+<img width="500" alt="Screenshot" src="https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/encryptingLargeMessage7.png?raw=true"><br>
 
 
 ## 3. Encrypt the body using CBC mode:
@@ -81,7 +77,7 @@ openssl enc -aes-256-cbc -nosalt -in body.bin -out encrypted_body.bin -K 0011223
 
 <span>*After using the `cat` command to look at the `encrypted_body.bin`, we can see it was fully encrypted.*</span><br>
 
-![alt text](asset/encryptingLargeMessage8.png)<br>
+<img width="500" alt="Screenshot" src="https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/encryptingLargeMessage8.png?raw=true"><br>
 
 ## 4. Combine the header and encrypted body:
 
@@ -89,7 +85,7 @@ openssl enc -aes-256-cbc -nosalt -in body.bin -out encrypted_body.bin -K 0011223
 cat header.bin encrypted_body.bin > partially_encrypted.bmp
 ```
 
-![alt text](asset/encryptingLargeMessage9.png)<br>
+<img width="500" alt="Screenshot" src="https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/encryptingLargeMessage9.png?raw=true"><br>
 
 ## 5. Encrypt the body using ECB mode:
 
@@ -103,29 +99,31 @@ openssl enc -aes-256-ecb -nosalt -in body.bin -out ecb_encrypted_body.bin -K 001
 cat header.bin ecb_encrypted_body.bin > ecb_partially_encrypted.bmp
 ```
 
-![alt text](asset/encryptingLargeMessage10.png)<br>
+<img width="500" alt="Screenshot" src="https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/encryptingLargeMessage10.png?raw=true"><br>
+
 
 ## 7. View the encrypted picture using any picture viewing software:
 
 <span>*Explain your observations about the differences between ECB modes encrypted picture:*</span><br>
 
-![alt text](asset/encryptingLargeMessage10.png)<br>
+<img width="500" alt="Screenshot" src="https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/encryptingLargeMessage10.png?raw=true"><br>
 
 <span>*With the one encrypted by CBC modes.*</span><br>
 
-![alt text](asset/encryptingLargeMessage9.png)<br>
+<img width="500" alt="Screenshot" src="https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/encryptingLargeMessage9.png?raw=true"><br>
 
-<span>If we compare the encrypted images:
 
-- **ECB Encrypted Image:**
-  - Visible patterns of the whale.
-  - Structure of the image gives clues about the original content.
-  - Less effective at hiding information.
+<span>*If we compare the encrypted images:*
 
-- **CBC Encrypted Image:**
-  - The image appears as complete random noise.
-  - No patterns or structure from the original image.
-  - Hiding the original content due to the chaining process and the use of IV.
+- ***ECB Encrypted Image:***
+  - *Visible patterns of the whale.*
+  - *Structure of the image gives clues about the original content.*
+  - *Less effective at hiding information.*
+
+- ***CBC Encrypted Image:***
+  - *The image appears as complete random noise.*
+  - *No patterns or structure from the original image.*
+  - *Hiding the original content due to the chaining process and the use of IV.*
 </span> <br>
 
 # 4.3. Encryption Mode – Corrupted Cipher Text
@@ -136,7 +134,7 @@ cat header.bin ecb_encrypted_body.bin > ecb_partially_encrypted.bmp
 sudo echo "This is a test file that is definitely longer than 64 bytes. It is used for encryption mode testing." > testfile.txt
 ```
 
-![img.png](asset/encryptingLargeMessage11.png)<br>
+<img width="500" alt="Screenshot" src="https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/encryptingLargeMessage11.png?raw=true"><br>
 
 ## 2. Encrypt the file using AES-256-CBC:
 
@@ -144,7 +142,7 @@ sudo echo "This is a test file that is definitely longer than 64 bytes. It is us
 openssl enc -aes-256-cbc -nosalt -in testfile.txt -out encrypted_testfile.txt -K 00112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF -iv 0102030405060708090A0B0C0D0E0F10
 ```
 
-![img.png](asset/encryptingLargeMessage12.png)<br>
+<img width="500" alt="Screenshot" src="https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/encryptingLargeMessage12.png?raw=true"><br>
 
 ## 3. Corrupt a bit of the 5th byte in the encrypted file:
 
@@ -152,7 +150,8 @@ openssl enc -aes-256-cbc -nosalt -in testfile.txt -out encrypted_testfile.txt -K
    printf '\x00' | dd of=encrypted_testfile.txt bs=1 seek=4 count=1 conv=notrunc
    ```
 
-![img.png](asset/encryptingLargeMessage13.png)<br>
+<img width="500" alt="Screenshot" src="https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/encryptingLargeMessage13.png?raw=true"><br>
+
 
 ## 4. **Decrypt the corrupted file**:
 
@@ -160,7 +159,8 @@ openssl enc -aes-256-cbc -nosalt -in testfile.txt -out encrypted_testfile.txt -K
 openssl enc -d -aes-256-cbc -nosalt -in encrypted_testfile.txt -out decrypted_testfile.txt -K 00112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF -iv 0102030405060708090A0B0C0D0E0F10
 ```
 
-![img_1.png](asset/encryptingLargeMessage14.png)<br>
+<img width="500" alt="Screenshot" src="https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/encryptingLargeMessage14.png?raw=true"><br>
+
 
 <span>**Impact of Corruption**:
 1. **Corrupted Byte**:
@@ -185,7 +185,9 @@ openssl enc -d -aes-256-cbc -nosalt -in encrypted_testfile.txt -out decrypted_te
    openssl enc -d -aes-256-ebc -nosalt -in ecb-encrypted_testfile.txt -out ecb_decrypted_testfile.txt -K 00112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF 
 
 ```
-![img.png](asset/encryptingLargeMessage15.png) <br>
+
+<img width="500" alt="Screenshot" src="https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/encryptingLargeMessage15.png?raw=true"><br>
+
 
 <span>*In the provided image for ECB (Electronic Codebook) mode, we can observe the following:*
 
@@ -210,7 +212,7 @@ The rest of the text after the first block is readable and correctly decrypted.*
 
 ```
 
-![img.png](asset/encryptingLargeMessage16.png)<br>
+<img width="500" alt="Screenshot" src="https://github.com/AlexanderSlokov/Security-Labs-Submission/blob/main/asset/encryptingLargeMessage16.png?raw=true"><br>
 
 <span>*In this case, I needed to modify the user's permission of the encrypted file a bit.*<br>
 
